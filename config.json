@@ -1,0 +1,6 @@
+{
+	"username": "NodeBot",
+	"webPort": 8080,
+	"webPassword": "hello",
+	"lastChannels": []
+}
