@@ -2,22 +2,30 @@
  * MssGs-node-bot
  *
  * A NodeJS plugin-based bot for mss.gs
- * Copyright 2012 Michael Owens
- * http://www.michaelowens.nl
+ * Copyright 2012 Michael Owens & Dean Ward
+ * http://mss.gs/channel/mssgsnb
  */
-var mssgs = require('./mssgs');
+var mssgs = require('./mssgs/api');
 
 /**
- * Config
+ * Configure the bot
+ * (soon to become a json file)
  */
-var config = {
-	username: 'MikeBot',
-	conversation: 'botdev',
-	// password: 'conversation password',
-	debug: true,
-	
-	plugin: ['reload']
-};
+var c = {};
 
-var bot = new mssgs.instance(config);
+// Bot config
+c.username = 'MikeBot';
+c.commandPrefix = '@' + c.username;
+
+// Web interface config
+c.webPort = 8080;
+c.webPassword = '';
+	
+// debug config
+c.debug = true;
+
+/**
+ * Start the bot
+ */
+var bot = new mssgs.instance(c);
 bot.connect();
