@@ -7,4 +7,3 @@
 var mssgs = require('./mssgs/api');
 
 var bot = new mssgs.instance();
-bot.connect();

@@ -12,8 +12,7 @@ var instance = exports.instance  = function () {
 	var self = this;
 	fs.readFile('./config.json', 'utf8', function (err, config) {
 		if (err) {
-			console.log('Could not find the config');
-			return;
+			throw 'Could not find the config';
 		}
 		
 		var c;
@@ -22,7 +21,7 @@ var instance = exports.instance  = function () {
 			self.init(c);
 		}
 		catch (e) {
-			console.log('Config file seems to be invalid');
+			throw 'Config file seems to be invalid';
 		}
 	});
 };
@@ -32,6 +31,8 @@ instance.prototype.init = function (config) {
 	this.webPort = config.webPort || 8080;
 	this.webPassword = config.webPassword || '';
 	this.channels = config.lastChannels || [];
+	
+	this.connect();
 };
 
 instance.prototype.connect = function () {
