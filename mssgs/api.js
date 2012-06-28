@@ -5,6 +5,7 @@
  * Copyright 2012 Michael Owens & Dean Ward
  */
 var fs = require('fs'),
+	webInterface = require('./web'),
 	user = require('./user'),
 	channel = require('./channel');
 
@@ -32,9 +33,12 @@ instance.prototype.init = function (config) {
 	this.webPassword = config.webPassword || '';
 	this.channels = config.lastChannels || [];
 	
+	// web interface
+	this.web = webInterface.init(this.webPort, this.webPassword);
+	
 	this.connect();
 };
 
 instance.prototype.connect = function () {
-	console.log('start...');
+	console.log('[bot] Start...');
 };
