@@ -143,6 +143,14 @@ instance.prototype.onMessage = function (data) {
 	console.log('[bot][<<]: Message from ' + data.username);
 	
 	if (data.username.toLowerCase() == 'internal') {
+		console.log(data);
+		var cmd = data.message.split(':')[0];
+		switch (cmd) {
+			case 'kick':
+				// rejoin
+				this.join(data.conversation);
+				break;
+		}
 		// handle internal
 		return;
 	}
