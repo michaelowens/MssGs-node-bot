@@ -1,5 +1,7 @@
 {
 	"username": "NodeBot",
+	"avatar": "http://newleafdigital.com/files/nodejs-dark.png",
+	"commandPrefix": "",
 	"webPort": 8080,
 	"webPassword": "hello",
 	"lastChannels": []
