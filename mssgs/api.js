@@ -68,8 +68,9 @@ instance.prototype.connect = function () {
 	var self = this;
 	this.s = io.connect('api.mss.gs', {port: 443, secure: true, reconnect: true});
 	this.s.on('connect', function () { self.onConnect() });
-	this.s.on('auth', function () { self.onAuth() });
+	this.s.on('auth', function (data) { self.onAuth(data) });
 	this.s.on('message', function (data) { self.onMessage(data) });
+	this.s.on('conversation info', function (data) { self.onConversationInfo(data) });
 };
 
 instance.prototype.loadPlugin = function (name) {
@@ -81,6 +82,7 @@ instance.prototype.loadPlugin = function (name) {
 		log.pass('[bot]', 'loaded plugin: ' + name);
 	} catch(e) {
 		log.error('[bot]', 'plugin could not be loaded');
+		throw 'Error loading plugin';
 	}
 };
 
@@ -101,7 +103,13 @@ instance.prototype.onConnect = function () {
 	this.s.emit('auth', {'username': this.config.username, 'avatar': this.config.avatar});
 };
 
-instance.prototype.onAuth = function () {
+instance.prototype.onAuth = function (data) {
+	console.log(data);
+	if (data.valid != true) {
+		log.info('[bot]', 'Authentication failed');
+		throw 'Authentication failed';
+		return;
+	}
 	log.info('[bot]', 'Authenticated');
 	this.join('nodebot');
 };
@@ -110,7 +118,7 @@ instance.prototype.onMessage = function (data) {
 	log.info('[bot][<<]', 'Message from ' + data.username);
 	
 	if (data.username.toLowerCase() == 'internal') {
-		console.log(data);
+		log.info('[internal]', data);
 		var cmd = data.message.split(':')[0];
 		switch (cmd) {
 			case 'kick':
@@ -126,16 +134,9 @@ instance.prototype.onMessage = function (data) {
 	if (arg[0].toLowerCase() !== this.config.commandPrefix.toLowerCase()) return;
 	
 	arg.shift();
-	var cmd = arg[0];
+	var cmd = arg[0] || '';
 	arg.shift();
 	var msg = arg.join(' ');
-	
-	switch (cmd) {
-		case 'reload':
-			if (typeof arg[0] == 'undefined') break;
-			this.loadPlugin(arg[0]);
-			break;
-	}
 	
 	for(var p in this.plugins) {
 		this.plugins[p].emit('command ' + cmd, data, arg, msg);
@@ -143,10 +144,20 @@ instance.prototype.onMessage = function (data) {
 	this.emit('message', data, arg, msg);
 };
 
+instance.prototype.onConversationInfo = function (data) {
+	log.info('[conversation]', data);
+	console.log(arguments);
+};
+
+
 // API functions
 instance.prototype.join = function (channel, password) {
 	log.info('[bot]', 'Joining channel: ' + channel);
+	
 	var packet = {'conversation': channel};
+	
+	this.s.emit('conversation info', packet, function () { console.log('joooin'); });
+	
 	if (password !== null) packet['robot password'] = password;
 	
 	this.s.emit('join conversation', packet);

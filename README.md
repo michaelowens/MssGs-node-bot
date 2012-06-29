@@ -1,4 +1,4 @@
-![MssGs-node-bot](http://i.imgur.com/gn6Y8.png)
+![MssGs-node-bot](http://i.imgur.com/BctcF.png)
 
 NodeJS plugin-based bot for mss.gs.
 

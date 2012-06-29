@@ -16,12 +16,20 @@ var Plugin = exports.Plugin = function (bot) {
 	this.bot = bot;
 	this.s = bot.s;
 	
-	this.on('command example', this.cmdExample);
+	this.on('command reload', this.cmdReload);
 };
 
 util.inherits(Plugin, events.EventEmitter);
 
-Plugin.prototype.cmdExample = function (msg, arg, str) {
-	this.bot.reply(msg, 'Thanks for using Example Plugin!');
-	//this.bot.s.emit('message', {'conversation': msg.conversation, 'text': 'Thanks for using Example Plugin!'});
+Plugin.prototype.cmdReload = function (msg, arg, str) {
+	if (typeof arg[0] == 'undefined') {
+		this.bot.reply(msg, 'Please give a plugin to reload');
+		return;
+	}
+	
+	try {
+		this.loadPlugin(arg[0]);
+	} catch(e) {
+		this.bot.reply(msg, 'Could not reload plugin (note: plugin is now inactive!)');
+	}
 };
