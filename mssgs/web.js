@@ -33,5 +33,5 @@ exports.init = web = function (port, password) {
 	
 	app.listen(port);
 	
-	console.log('[web] Web interface started on port ' + port);
+	log.info('Web interface started on port ' + port);
 };

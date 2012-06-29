@@ -3,19 +3,25 @@
  *
  * An example plugin showing off the basic functionality of plugins
  */
-exports.Plugin = Plugin = function (bot) {
+var util = require('util'),
+	events = require('events');
+
+var Plugin = exports.Plugin = function (bot) {
 	this.config = [];
 	this.config.name = 'example';
 	this.config.title = 'Example Plugin';
-	this.config.version = '0.1';
+	this.config.version = '1.0';
 	this.config.author = 'Michael Owens';
 	
 	this.bot = bot;
 	this.s = bot.s;
 	
-	bot.addTrigger(this, 'example', this.exampleResponse);
+	this.on('command example', this.onExample);
 };
 
-Plugin.prototype.exampleResponse = function (msg) {
-	this.s.emit('message', {'conversation': msg.conversation, 'text': 'Thanks for using Example Plugin!'});
-}
+util.inherits(Plugin, events.EventEmitter);
+
+Plugin.prototype.onExample = function (msg, arg, str) {
+	this.bot.reply(msg, 'Thanks for using Example Plugin v2!');
+	//this.bot.s.emit('message', {'conversation': msg.conversation, 'text': 'Thanks for using Example Plugin!'});
+};

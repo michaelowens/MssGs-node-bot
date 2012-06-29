@@ -5,17 +5,23 @@
  * Copyright 2012 Michael Owens & Dean Ward
  */
 var util = require('util'),
+	events = require('events'),
 	fs = require('fs'),
+	path = require('path'),
 	io = require('socket.io-client'),
 	webInterface = require('./web'),
 	user = require('./user'),
-	channel = require('./channel');
+	channel = require('./channel'),
+	Logger = require('./log');
+
+global.log = new Logger();
 
 var instance = exports.instance  = function () {
 	var self = this;
 	fs.readFile('./config.json', 'utf8', function (err, config) {
 		if (err) {
-			throw 'Could not find the config';
+			log.error('[bot]', 'Could not find the config');
+			throw err;
 		}
 		
 		var c;
@@ -29,7 +35,7 @@ var instance = exports.instance  = function () {
 	});
 };
 
-util.inherits(instance, process.EventEmitter);
+util.inherits(instance, events.EventEmitter);
 
 instance.prototype.init = function (config) {
 	this.s = null;
@@ -57,7 +63,7 @@ instance.prototype.init = function (config) {
 };
 
 instance.prototype.connect = function () {
-	console.log('[bot] Start...');
+	log.info('[bot]', 'Starting bot...');
 	
 	var self = this;
 	this.s = io.connect('api.mss.gs', {port: 443, secure: true, reconnect: true});
@@ -66,63 +72,24 @@ instance.prototype.connect = function () {
 	this.s.on('message', function (data) { self.onMessage(data) });
 };
 
-instance.prototype.addListener = function (plugin, event, f) {
-	if (typeof this.hooks[plugin] == 'undefined') {
-		this.hooks[plugin] = [];
-	}
-	
-	var callback = (function () {
-		return function () {
-			f.apply(that, arguments);
-		}
-	})();
-	
-	this.hooks[plugin].push({'event': event, 'callback': callback});
-	
-	var that = this.plugins[plugin];
-	return this.on(event, callback);
-};
-
-instance.prototype.addTrigger = function (plugin, trigger, callback) {
-	if (typeof this.triggers[trigger] == 'undefined') {
-		this.triggers[trigger] = {'plugin': plugin.config.name, 'callback': callback};
-	}
-};
-
 instance.prototype.loadPlugin = function (name) {
 	this.unloadPlugin(name);
 	
-	var that = this;
-	fs.readFile('./plugins/' + name + '.js', 'utf8', function (err, data) {
-		if (err) {
-			console.log(err);
-			return;
-		}
-		
-		eval(data);
-		that.plugins[name] = new Plugin(that);
-		
-		['connect', 'auth', 'message'].forEach(function (event) {
-			var onEvent = 'on' + event.charAt(0).toUpperCase() + event.substr(1),
-				callback = this.plugins[name][onEvent];
-			
-			if (typeof callback == 'function') {
-				this.addListener(name, event, callback);
-			}
-		}, that);
-	});
+	try {
+		var p = require('../plugins/' + name);
+		this.plugins[name] = new p.Plugin(this);
+		log.pass('[bot]', 'loaded plugin: ' + name);
+	} catch(e) {
+		log.error('[bot]', 'plugin could not be loaded');
+	}
 };
 
 instance.prototype.unloadPlugin = function (name) {
 	if (typeof this.plugins[name] == 'undefined') return;
-	
 	delete this.plugins[name];
 	
-	for(var trigger in this.triggers) {
-		if (this.triggers[trigger].plugin == name) {
-			delete this.triggers[trigger];
-		}
-	}
+	var p = path.normalize(__dirname + '/../plugins/' + name);
+	delete require.cache[p + '.js'];
 };
 
 
@@ -130,17 +97,17 @@ instance.prototype.unloadPlugin = function (name) {
  * Socket functions
  */
 instance.prototype.onConnect = function () {
-	console.log('[bot] Connected');
+	log.info('[bot]', 'Connected');
 	this.s.emit('auth', {'username': this.config.username, 'avatar': this.config.avatar});
 };
 
 instance.prototype.onAuth = function () {
-	console.log('[bot] Authenticated');
+	log.info('[bot]', 'Authenticated');
 	this.join('nodebot');
 };
 
 instance.prototype.onMessage = function (data) {
-	console.log('[bot][<<]: Message from ' + data.username);
+	log.info('[bot][<<]', 'Message from ' + data.username);
 	
 	if (data.username.toLowerCase() == 'internal') {
 		console.log(data);
@@ -163,22 +130,34 @@ instance.prototype.onMessage = function (data) {
 	arg.shift();
 	var msg = arg.join(' ');
 	
-	this.s.emit('message', {'conversation': data.conversation, 'text': 'What\'s up, ' + data.username + '?'});
-	
-	if (typeof this.triggers[cmd] != 'undefined') {
-		var trig = this.triggers[cmd];
-		trig.callback.apply(this.plugins[trig['plugin']], arguments, msg);
+	switch (cmd) {
+		case 'reload':
+			if (typeof arg[0] == 'undefined') break;
+			this.loadPlugin(arg[0]);
+			break;
 	}
 	
-	this.emit(cmd, msg);
-	this.emit('message', arg, msg);
+	for(var p in this.plugins) {
+		this.plugins[p].emit('command ' + cmd, data, arg, msg);
+	}
+	this.emit('message', data, arg, msg);
 };
 
 // API functions
 instance.prototype.join = function (channel, password) {
-	console.log('[bot] Joining channel: ' + channel);
+	log.info('[bot]', 'Joining channel: ' + channel);
 	var packet = {'conversation': channel};
 	if (password !== null) packet['robot password'] = password;
 	
 	this.s.emit('join conversation', packet);
+};
+
+instance.prototype.reply = function (data, msg) {
+	if (typeof data == 'undefined' || typeof data.conversation == 'undefined' || typeof msg == 'undefined') {
+		log.warn('invalid reply');
+		return;
+	}
+	
+	var packet = {'conversation': data.conversation, 'text': msg};
+	this.s.emit('message', packet);
 };
