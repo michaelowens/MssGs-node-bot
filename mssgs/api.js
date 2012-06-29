@@ -4,7 +4,8 @@
  * A NodeJS plugin-based bot for mss.gs
  * Copyright 2012 Michael Owens & Dean Ward
  */
-var fs = require('fs'),
+var util = require('util'),
+	fs = require('fs'),
 	io = require('socket.io-client'),
 	webInterface = require('./web'),
 	user = require('./user'),
@@ -22,11 +23,13 @@ var instance = exports.instance  = function () {
 			var c = JSON.parse(config);
 		}
 		catch (e) {
-			throw '[error] ' + e.message;
+			throw e;
 		}
 		self.init(c);
 	});
 };
+
+util.inherits(instance, process.EventEmitter);
 
 instance.prototype.init = function (config) {
 	this.s = null;
@@ -39,6 +42,13 @@ instance.prototype.init = function (config) {
 	this.config.channels = config.lastChannels || [];
 	
 	this.hooks = [];
+	this.triggers = [];
+	
+	// plugins
+	this.plugins = [];
+	for (var i = 0, z = config.plugins.length; i < z; i++) {
+		this.loadPlugin(config.plugins[i]);
+	}
 	
 	// web interface
 	this.web = webInterface.init(this.config.webPort, this.config.webPassword);
@@ -73,6 +83,48 @@ instance.prototype.addListener = function (plugin, event, f) {
 	return this.on(event, callback);
 };
 
+instance.prototype.addTrigger = function (plugin, trigger, callback) {
+	if (typeof this.triggers[trigger] == 'undefined') {
+		this.triggers[trigger] = {'plugin': plugin.config.name, 'callback': callback};
+	}
+};
+
+instance.prototype.loadPlugin = function (name) {
+	this.unloadPlugin(name);
+	
+	var that = this;
+	fs.readFile('./plugins/' + name + '.js', 'utf8', function (err, data) {
+		if (err) {
+			console.log(err);
+			return;
+		}
+		
+		eval(data);
+		that.plugins[name] = new Plugin(that);
+		
+		['connect', 'auth', 'message'].forEach(function (event) {
+			var onEvent = 'on' + event.charAt(0).toUpperCase() + event.substr(1),
+				callback = this.plugins[name][onEvent];
+			
+			if (typeof callback == 'function') {
+				this.addListener(name, event, callback);
+			}
+		}, that);
+	});
+};
+
+instance.prototype.unloadPlugin = function (name) {
+	if (typeof this.plugins[name] == 'undefined') return;
+	
+	delete this.plugins[name];
+	
+	for(var trigger in this.triggers) {
+		if (this.triggers[trigger].plugin == name) {
+			delete this.triggers[trigger];
+		}
+	}
+};
+
 
 /**
  * Socket functions
@@ -102,12 +154,16 @@ instance.prototype.onMessage = function (data) {
 	var cmd = arg[0];
 	arg.shift();
 	var msg = arg.join(' ');
-	console.log('[command]: ' + cmd);
-	console.log('[arguments]:');
-	console.log(arg);
-	console.log('[message]: ' + msg);
 	
 	this.s.emit('message', {'conversation': data.conversation, 'text': 'What\'s up, ' + data.username + '?'});
+	
+	if (typeof this.triggers[cmd] != 'undefined') {
+		var trig = this.triggers[cmd];
+		trig.callback.apply(this.plugins[trig['plugin']], arguments, msg);
+	}
+	
+	this.emit(cmd, msg);
+	this.emit('message', arg, msg);
 };
 
 // API functions
