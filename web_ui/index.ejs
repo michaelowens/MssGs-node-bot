@@ -6,36 +6,83 @@
 	    <meta name="description" content="">
 	    <meta name="viewport" content="width=device-width">
 	    <link href="css/bootstrap.css" rel="stylesheet">
-	    <style>
-	      body {
-	        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-	      }
-	    </style>	    
+	    <link href="css/style.css" rel="stylesheet">    
 	</head>
 	<body>
-	    <div class="navbar navbar-fixed-top">
-	      <div class="navbar-inner">
-	        <div class="container">
-	          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	          </a>
-	          <a class="brand" href="#">Nodebot Admin </a>
-	          <div class="nav-collapse">
-	            <ul class="nav">
-	              <li class="active"><a href="#">Home</a></li>
-	              <li><a href="#about">Channels</a></li>
-	              <li><a href="#contact">Settings</a></li>
-	            </ul>
-	          </div><!--/.nav-collapse -->
-	        </div>
-	      </div>
-	    </div>
-
-	    <div class="container" style="background:red;">
-
-dd
-	    </div>		
+	    <div class="container">
+	    	<div id="logo">
+	    		<img src="img/logoSmall.png" alt="NodeBot" />
+	    	</div>
+	    	<div class="clearfix"></div>
+	    	<div class="settings row">
+	    		<div class="span4">
+		    		<div class="inner">
+		    			<div class="tile">
+			    			<h1 style="background-image:url(img/icon_conf.png);">Configuration</h1>
+			    			<ul>
+			    				<li><a style="background-image:url(img/icon_gear.png);" href="#settingsGlobal" id="b_global" class="bt" >Global</a></li>
+			    				<li><a style="background-image:url(img/icon_boxes.png);" href="#settingsChannels" id="b_channels" class="bt">Channels</a></li>
+			    				<li><a style="background-image:url(img/icon_users.png);" href="#">Users</a></li>
+			    				<li><a style="background-image:url(img/icon_plugins.png);" href="#">Plugins</a></li>
+			    			</ul>
+		    			</div>
+		    		</div>
+				</div>
+				<div class="subsettings" >
+		    		<div class="span8" >
+			    		<div class="inner" >
+			    			<div class="tile settingsGlobal see">
+				    			<h1 style="background-image:url(img/icon_gear_lrg.png);">Global Configuration</h1>
+				    			<ul>
+				    				<li><a style="background-image:url(img/icon_ident.png);" href="#">Bot Identity</a></li>
+				    				<li><a style="background-image:url(img/icon_stats.png);" href="#">Bot Statistics</a></li>
+				    				<li><a style="background-image:url(img/icon_updates.png);" href="#">Bot Updates</a></li>
+				    				<li><a style="background-image:url(img/icon_help.png);" href="#">Help &amp; Support</a></li>
+				    			</ul>
+			    			</div>
+			    			<div class="tile settingsChannels">
+				    			<h1 style="background-image:url(img/icon_gear_lrg.png);">Channels Configuration</h1>
+				    			<ul>
+				    				<li><a style="background-image:url(img/icon_ident.png);" href="#">Manage Channels</a></li>
+				    				<li><a style="background-image:url(img/icon_stats.png);" href="#">Channel Specific Plugins</a></li>
+				    				<li><a style="background-image:url(img/icon_updates.png);" href="#">Channel Logs</a></li>
+				    				<li><a style="background-image:url(img/icon_help.png);" href="#">Help &amp; Support</a></li>
+				    			</ul>
+			    			</div>			    			
+			    		</div>
+					</div>
+				</div>			
+	   		</div>
+	   		<div class=" row">
+	    		<div class="span5 files">
+		    		<div class="inner">
+		    			<div class="tile">
+			    			<h1 style="background-image:url(img/icon_files.png);">Manage Files</h1>
+			    			<ul>
+			    				<li><a style="background-image:url(img/icon_folder_small.png);" href="#">channels/</a></li>
+			    				<li><a style="background-image:url(img/icon_folder_small.png);" href="#">plugins/</a></li>
+			    				<li><a style="background-image:url(img/icon_folder_small.png);" href="#">images/</a></li>
+			    				<li><a style="background-image:url(img/icon_folder_small.png);" href="#">logs/</a></li>
+			    			</ul>
+		    			</div>
+		    		</div>
+				</div>	   			
+	   		</div>
+	    </div>	
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script type="text/javascript" src="js/ui.js"></script>
+	<script type="text/javascript">
+		$("document").ready(function(){
+			$(".bt").click(function(){
+				swaptile($(this).attr("href"));
+				return false;
+			});
+		});
+		function swaptile(newt) {
+			$(".see").removeClass('see').hide("slide", { direction: "right" }, 300,function(){
+				$(newt.replace("#",".")).addClass('see').fadeOut(300).show("slide", { direction: "left" }, 300);
+			});
+		}
+	</script>	
 	</body>
 </html>
