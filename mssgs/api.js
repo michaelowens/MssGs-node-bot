@@ -38,7 +38,7 @@ instance.prototype.init = function (config) {
 	this.config.webPassword = config.webPassword || '';
 	this.config.channels = config.lastChannels || [];
 	
-	console.log(this.config.commandPrefix);
+	this.hooks = [];
 	
 	// web interface
 	this.web = webInterface.init(this.config.webPort, this.config.webPassword);
@@ -56,6 +56,27 @@ instance.prototype.connect = function () {
 	this.s.on('message', function (data) { self.onMessage(data) });
 };
 
+instance.prototype.addListener = function (plugin, event, f) {
+	if (typeof this.hooks[plugin] == 'undefined') {
+		this.hooks[plugin] = [];
+	}
+	
+	var callback = (function () {
+		return function () {
+			f.apply(that, arguments);
+		}
+	})();
+	
+	this.hooks[plugin].push({'event': event, 'callback': callback});
+	
+	var that = this.plugins[plugin];
+	return this.on(event, callback);
+};
+
+
+/**
+ * Socket functions
+ */
 instance.prototype.onConnect = function () {
 	console.log('[bot] Connected');
 	this.s.emit('auth', {'username': this.config.username, 'avatar': this.config.avatar});
@@ -89,6 +110,7 @@ instance.prototype.onMessage = function (data) {
 	this.s.emit('message', {'conversation': data.conversation, 'text': 'What\'s up, ' + data.username + '?'});
 };
 
+// API functions
 instance.prototype.join = function (channel, password) {
 	console.log('[bot] Joining channel: ' + channel);
 	var packet = {'conversation': channel};
