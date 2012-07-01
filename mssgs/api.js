@@ -71,6 +71,7 @@ instance.prototype.connect = function () {
 	this.s.on('auth', function (data) { self.onAuth(data) });
 	this.s.on('message', function (data) { self.onMessage(data) });
 	this.s.on('conversation info', function (data) { self.onConversationInfo(data) });
+	this.s.on('failed to join conversation', function (data) { self.onConversationFail(data); });
 };
 
 instance.prototype.loadPlugin = function (name) {
@@ -111,7 +112,8 @@ instance.prototype.onAuth = function (data) {
 		return;
 	}
 	log.info('[bot]', 'Authenticated');
-	this.join('nodebot');
+	//this.join('dev', '6GAjSyEnjFpDEEav');
+	this.join('nodebot', 'RUmIEBZaT7hL4JPp');
 };
 
 instance.prototype.onMessage = function (data) {
@@ -146,7 +148,10 @@ instance.prototype.onMessage = function (data) {
 
 instance.prototype.onConversationInfo = function (data) {
 	log.info('[conversation]', data);
-	console.log(arguments);
+};
+
+instance.prototype.onConversationFail = function (data) {
+	log.warn('[conversation]', 'join failed (err ' + data.error + '):', data.message);
 };
 
 
@@ -156,7 +161,7 @@ instance.prototype.join = function (channel, password) {
 	
 	var packet = {'conversation': channel};
 	
-	this.s.emit('conversation info', packet, function () { console.log('joooin'); });
+	this.s.emit('conversation info', packet);
 	
 	if (password !== null) packet['robot password'] = password;
 	

@@ -1,27 +1,25 @@
 /**
- * Example Plugin
- *
- * An example plugin showing off the basic functionality of plugins
+ * Memory Test
  */
 var util = require('util'),
 	events = require('events');
 
 var Plugin = exports.Plugin = function (bot) {
 	this.config = [];
-	this.config.name = 'example';
-	this.config.title = 'Example Plugin';
+	this.config.name = 'memory_test';
+	this.config.title = 'Memory Test Plugin';
 	this.config.version = '1.0';
 	this.config.author = 'Michael Owens';
 	
 	this.bot = bot;
 	this.s = bot.s;
 	
-	this.on('command example', this.cmdExample);
+	this.on('command memorytest', this.cmdMemoryTest);
 };
 
 util.inherits(Plugin, events.EventEmitter);
 
-Plugin.prototype.cmdExample = function (msg, arg, str) {
-	this.bot.reply(msg, 'Thanks for using Example Plugin asfswdagdafhgdsfhsdfh!');
+Plugin.prototype.cmdMemoryTest = function (msg, arg, str) {
+	this.bot.reply(msg, 'Thanks for using Memory Test Plugin!');
 	//this.bot.s.emit('message', {'conversation': msg.conversation, 'text': 'Thanks for using Example Plugin!'});
 };
